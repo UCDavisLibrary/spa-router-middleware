@@ -43,6 +43,13 @@ async function handleRequest(req, res) {
     html = html.replace(/{{config}}/, '');
   }
 
+  if( mconfig.template ) {
+    let varMap = await mconfig.template(req, res);
+    for( var key in varMap ) {
+      html = html.replace(new RegExp(`{{${key}}}`,'g'), varMap[key]);
+    }
+  }
+
   res.send(html);
 }
 
