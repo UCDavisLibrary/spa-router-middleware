@@ -32,24 +32,43 @@ async function middleware(config) {
 }
 
 async function handleRequest(req, res) {
-  res.set('Content-Type', 'text/html');
+  
 
   let html = fs.readFileSync(mconfig.htmlFile, 'utf-8');
 
+  handleConfig(req, res, html);
+
+
+
+}
+
+function handleConfig(req, res, html) {
   if( mconfig.getConfig ) {
-    let data = await mconfig.getConfig(req, res);
-    html = html.replace(/{{config}}/, `<script>var APP_CONFIG = ${JSON.stringify(data)};</script>`);
+    mconfig.getConfig(req, res, (data) => {
+      html = html.replace(/{{config}}/, `<script>var APP_CONFIG = ${JSON.stringify(data)};</script>`);
+      handleTemplate(req, res, html);
+    });
   } else {
     html = html.replace(/{{config}}/, '');
+    handleTemplate(req, res, html);
   }
+}
 
+function handleTemplate(req, res, html) {
   if( mconfig.template ) {
-    let varMap = await mconfig.template(req, res);
-    for( var key in varMap ) {
-      html = html.replace(new RegExp(`{{${key}}}`,'g'), varMap[key]);
-    }
+    mconfig.template(req, res, (varMap) => {
+      for( var key in varMap ) {
+        html = html.replace(new RegExp(`{{${key}}}`,'g'), varMap[key]);
+      }
+      send(res, html);
+    });
+  } else {
+    send(res, html);
   }
+}
 
+function send(res, html) {
+  res.set('Content-Type', 'text/html');
   res.send(html);
 }
 
