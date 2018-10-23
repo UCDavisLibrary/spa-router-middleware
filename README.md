@@ -27,7 +27,7 @@ module.exports = (app) => {
     htmlFile : path.join(assetsDir, 'index.html'), // pass the file you want to use
     isRoot : true, // are we serving from host root (/)?
     appRoutes : config.appRoutes, // array of root paths.  ie appRoutes = ['foo', 'bar'] to server /foo/* /bar/*
-    getConfig : async (req, res) => {
+    getConfig : async (req, res, next) => {
       let user;
       if( req.session.user ) {
         user = {
@@ -38,10 +38,13 @@ module.exports = (app) => {
         user = {loggedIn: false};
       }
 
-      return {
+      next({
         user : user,
         appRoutes : config.appRoutes
-      }
+      });
+    },
+    template : (req, res, next) => {
+      next({title: 'spa test'});
     }
   });
 
@@ -71,7 +74,8 @@ index.html
 <!doctype html>
 <html>
   <head>
-    <title>My Site</title>
+    <!-- template variable -->
+    <title>{{title}}</title>
     <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=no">
 
     <!-- 
