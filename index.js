@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-let mconfig = null;
 
 /**
  * @function middleware
@@ -16,47 +15,41 @@ let mconfig = null;
  * @param {Boolean} config.isRoot should the root path serve the SPA?
  * @param {Function} config.getConfig append additional config via mustache {{config}} in html file
  */
-async function middleware(config) {
-  mconfig = config;
+function middleware(config) {
   if( !config.appRoutes ) config.appRoutes = [];
 
   if( config.isRoot ) {
-    let filename = path.parse(config.htmlFile).base;
-    config.app.use(/^\/$/, handleRequest);
-    config.app.use(`/${filename}`, handleRequest);
+    config.app.use(/^\/$/, (req, res) => handleRequest(req, res, config));
   }
 
+  let filename = path.parse(config.htmlFile).base;
+  config.app.use(`/${filename}`, (req, res) => handleRequest(req, res, config));
+
   config.appRoutes.forEach(route => {
-    config.app.use(`/${route}*`, handleRequest);
+    config.app.use(`/${route}*`, (req, res) => handleRequest(req, res, config));
   });
 }
 
-async function handleRequest(req, res) {
-  
-
-  let html = fs.readFileSync(mconfig.htmlFile, 'utf-8');
-
-  handleConfig(req, res, html);
-
-
-
+function handleRequest(req, res, config) {
+  let html = fs.readFileSync(config.htmlFile, 'utf-8');
+  handleConfig(req, res, html, config);
 }
 
-function handleConfig(req, res, html) {
-  if( mconfig.getConfig ) {
-    mconfig.getConfig(req, res, (data) => {
+function handleConfig(req, res, html, config) {
+  if( config.getConfig ) {
+    config.getConfig(req, res, (data) => {
       html = html.replace(/{{config}}/, `<script>var APP_CONFIG = ${JSON.stringify(data)};</script>`);
-      handleTemplate(req, res, html);
+      handleTemplate(req, res, html, config);
     });
   } else {
     html = html.replace(/{{config}}/, '');
-    handleTemplate(req, res, html);
+    handleTemplate(req, res, html, config);
   }
 }
 
-function handleTemplate(req, res, html) {
-  if( mconfig.template ) {
-    mconfig.template(req, res, (varMap) => {
+function handleTemplate(req, res, html, config) {
+  if( config.template ) {
+    config.template(req, res, (varMap) => {
       for( var key in varMap ) {
         html = html.replace(new RegExp(`{{${key}}}`,'g'), varMap[key]);
       }
