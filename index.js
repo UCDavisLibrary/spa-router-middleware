@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const express = require('express');
 
 /**
  * @function middleware
@@ -13,6 +14,10 @@ const fs = require('fs');
  * @param {Object} config.app express server instance
  * @param {String} config.htmlFile full path to html file to serve
  * @param {Boolean} config.isRoot should the root path serve the SPA?
+ * @param {Object} config.static have the middleware register express static?  This is required for 404 pages
+ * @param {Object} config.static.dir dir to serve for static assets
+ * @param {Object} config.static.opts additional options for express.static()
+ * @param {Boolean} config.enable404 serve the SPA as the 404 page, requires stati
  * @param {Function} config.getConfig append additional config via mustache {{config}} in html file
  */
 function middleware(config) {
@@ -28,6 +33,19 @@ function middleware(config) {
   config.appRoutes.forEach(route => {
     config.app.use(`/${route}*`, (req, res) => handleRequest(req, res, config));
   });
+
+  if( config.static ) {
+    let opts = config.static.opts || {};
+    opts.fallthrough = true;
+    config.app.use(express.static(config.static.dir, opts));
+  }
+
+  if( config.enable404 ) {
+    config.app.use((req, res) => {
+      res.status(404);
+      handleRequest(req, res, config)
+    });
+  }
 }
 
 function handleRequest(req, res, config) {
@@ -42,7 +60,6 @@ function handleConfig(req, res, html, config) {
       handleTemplate(req, res, html, config);
     });
   } else {
-    html = html.replace(/{{config}}/, '');
     handleTemplate(req, res, html, config);
   }
 }
