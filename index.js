@@ -36,7 +36,9 @@ function middleware(config) {
 
   if( config.static ) {
     let opts = config.static.opts || {};
-    opts.fallthrough = true;
+    if( config.enable404 ) {
+      opts.fallthrough = true;
+    }
     config.app.use(express.static(config.static.dir, opts));
   }
 
