@@ -39,7 +39,13 @@ function middleware(config) {
     if( config.enable404 ) {
       opts.fallthrough = true;
     }
-    config.app.use(express.static(config.static.dir, opts));
+    if( opts.basePath ) {
+      let basePath = opts.basePath;
+      delete opts.basePath;
+      config.app.use(basePath, express.static(config.static.dir, opts));
+    } else {
+      config.app.use(express.static(config.static.dir, opts));
+    }
   }
 
   if( config.enable404 ) {
