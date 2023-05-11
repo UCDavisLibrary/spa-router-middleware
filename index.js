@@ -26,6 +26,9 @@ function middleware(config) {
   if( config.isRoot ) {
     config.app.use(/^\/$/, (req, res) => handleRequest(req, res, config));
   }
+  if( config.rootPath ) {
+    config.app.use(config.rootPath, (req, res) => handleRequest(req, res, config));
+  }
 
   let filename = path.parse(config.htmlFile).base;
   config.app.use(`/${filename}`, (req, res) => handleRequest(req, res, config));
