@@ -34,7 +34,7 @@ function middleware(config) {
   config.app.use(`/${filename}`, (req, res) => handleRequest(req, res, config));
 
   config.appRoutes.forEach(route => {
-    config.app.use(`/${route}*`, (req, res) => handleRequest(req, res, config));
+    config.app.use(new RegExp(`^\/${route}($|\/.*)`), (req, res) => handleRequest(req, res, config));
   });
 
   if( config.static ) {
