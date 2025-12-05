@@ -33,6 +33,7 @@ module.exports = (app) => {
     isRoot : true, 
     
     // array of root paths.  ie appRoutes = ['foo', 'bar'] to server /foo/* /bar/*
+    // or use allRoutes: true, to serve on all routes except your static assets
     appRoutes : config.appRoutes, 
     
     // options for express.static(dir, opts)

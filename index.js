@@ -11,6 +11,7 @@ const express = require('express');
  * 
  * @param {Object} config middleware config object
  * @param {Array} config.appRoutes base routes to be handled by SPA
+ * @param {Boolean} config.allRoutes handle all routes via SPA
  * @param {Object} config.app express server instance
  * @param {String} config.htmlFile full path to html file to serve
  * @param {Boolean} config.isRoot should the root path serve the SPA?
@@ -33,9 +34,11 @@ function middleware(config) {
   let filename = path.parse(config.htmlFile).base;
   config.app.use(`/${filename}`, (req, res) => handleRequest(req, res, config));
 
-  config.appRoutes.forEach(route => {
-    config.app.use(new RegExp(`^\/${route}($|\/.*)`), (req, res) => handleRequest(req, res, config));
-  });
+  if ( !config.allRoutes ) {
+    config.appRoutes.forEach(route => {
+      config.app.use(new RegExp(`^\/${route}($|\/.*)`), (req, res) => handleRequest(req, res, config));
+    });
+  }
 
   if( config.static ) {
     let opts = config.static.opts || {};
@@ -55,6 +58,12 @@ function middleware(config) {
     config.app.use((req, res) => {
       res.status(404);
       handleRequest(req, res, config)
+    });
+  }
+
+  if( config.allRoutes ) {
+    config.app.use((req, res) => {
+      handleRequest(req, res, config);
     });
   }
 }
